@@ -1,10 +1,8 @@
 package com.flux.modules;
 
 import android.util.Log;
-import android.widget.Toast;
 
 import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -12,10 +10,11 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.WritableMap;
 
 import org.stellar.sdk.KeyPair;
+import org.stellar.sdk.Server;
+import org.stellar.sdk.responses.AccountResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Scanner;
 
@@ -32,8 +31,6 @@ public class StellarAccount extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public static void createTestAccount(final Promise promise) {
-
-
     new Thread(new Runnable() {
       @Override
       public void run() {
@@ -53,7 +50,6 @@ public class StellarAccount extends ReactContextBaseJavaModule {
           response = new URL(friendbotUrl).openStream();
           String body = new Scanner(response, "UTF-8").useDelimiter("\\A").next();
           response.close();
-          ret.putString("response", body);
           promise.resolve(ret);
           //successCallback.invoke(relativeX, relativeY, width, height);
         } catch (IOException e) {
@@ -69,12 +65,39 @@ public class StellarAccount extends ReactContextBaseJavaModule {
         }
       }
     }).start();
-
-
   }
 
   @ReactMethod
-  public void show(String message, int duration) {
-    Toast.makeText(getReactApplicationContext(), message, duration).show();
+  public static void getBalance(final String accountId, final Promise promise) {
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        Server server = new Server("https://horizon-testnet.stellar.org");
+        KeyPair pair = KeyPair.fromAccountId(accountId);
+        Double xlmBalance = 0.0;
+        try {
+          AccountResponse account = server.accounts().account(pair);
+          for (AccountResponse.Balance balance : account.getBalances()) {
+            if (balance.getAssetType() != null && balance.getAssetType().equals("native")) {
+              xlmBalance += Double.valueOf(balance.getBalance());
+            }
+          }
+          promise.resolve(xlmBalance);
+        } catch (IOException e) {
+          promise.reject(e);
+        }
+      }
+    }).start();
+  }
+
+  @ReactMethod
+  public static void isValidAccountId(final String accountId, final Promise promise) {
+    // TODO: Reimplement checksum so we don't rely on exceptions for code flow.
+    try {
+      KeyPair.fromAccountId(accountId);
+      promise.resolve(true);
+    } catch (Exception e) {
+      promise.resolve(false);
+    }
   }
 }
