@@ -62,6 +62,39 @@ export default class SendPage extends React.Component {
         <ScrollView style={styles.container} keyboardShouldPersistTaps='handled'>
           <View style={styles.recipientContainer}>
             <Text style={styles.title}>RECIPIENT</Text>
+
+            <View style={styles.buttonContainer}>
+              <View style={styles.buttonWrap}>
+                <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple('#fff', true)} style={styles.ripple} >
+                  <View style={styles.actionInnerContainer}>
+                    <Svg height={36} width={36}>
+                      <Circle cx="12" cy="12" r="3.2" scale='1.5' fill='#fff'/>
+                      <Path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.36-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" scale='1.5' fill='#fff'/>
+                      <Path d="M0 0h24v24H0z" fill="none"/>
+                    </Svg>
+                  </View>
+                </TouchableNativeFeedback>
+                <Text style={styles.recipientInputButtonDesc}>Scan account id or QR code</Text>
+              </View>
+
+          <View style={styles.dividerWrap}>
+            <View style={styles.verticalDividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.verticalDividerLine} />
+          </View>
+              <View style={styles.buttonWrap}>
+          <TouchableNativeFeedback background={TouchableNativeFeedback.Ripple('#fff', true)} style={styles.ripple} >
+                <View style={styles.actionInnerContainer}>
+                  <Svg height={36} width={36}>
+                    <Path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z" scale='1.5' fill='#fff'/>
+                    <Path d="M0 0h24v24H0z" fill="none"/>
+                  </Svg>
+                </View>
+              </TouchableNativeFeedback>
+            <Text style={styles.recipientInputButtonDesc}>Paste account id from clipboard</Text>
+                </View>
+            </View>
+
             <View style={styles.recipientTextInputContainer}>
               <TextInput
                 ref='recipientInput'
@@ -107,7 +140,6 @@ export default class SendPage extends React.Component {
             <Text style={styles.confirmationInfo}>You will be required to enter your PIN code.</Text>
           </View>
         </ScrollView>
-
         <Modal
           style={styles.modal}
           visible={this.state.isModalVisible}
