@@ -1,19 +1,61 @@
 import React from 'react';
-import { StyleSheet, Text, View, Dimensions, TouchableNativeFeedback, Platform } from 'react-native';
+import { StyleSheet, Text, View, Dimensions, TouchableNativeFeedback, AsyncStorage, ActivityIndicator,  Platform, RefreshControl, ScrollView } from 'react-native';
 import { Button } from 'react-native-common';
 import Svg, { Path, RadialGradient, Rect, Defs, Stop } from 'react-native-svg';
+import StellarAccount from '../helper/StellarAccount';
+import FormattingUtils from '../helper/FormattingUtils';
+import Transaction from '../components/Transaction';
 
 export default class BalancePage extends React.Component {
   
-  state = { balance: 22907.3978986  }
+  state = { balance: 22907.3978986, isLoadingBalance: true, isMounted: true, refreshing: false }
+
+  async componentWillMount() {
+    let accountId = await AsyncStorage.getItem('@Flux:accountId')
+    console.log('accountId: ', accountId)
+    let balance = await StellarAccount.getBalance(accountId)
+    if (this.state.isMounted) {
+      this.setState({ balance, isLoadingBalance: false })
+    }
+  }
+
+  componentWillUnmount() {
+    this.setState({ ...this.state, isMounted: false })
+  }
+
+  onRefresh = () => {
+    this.setState({ refreshing: true });
+    setTimeout(() => {
+      this.setState({ refreshing: false });
+    }, 5000)
+    //fetchData().then(() => {
+      //this.setState({ refreshing: false });
+    //});
+    //
+
+    // Fetch
+    // - (new) transactions
+    // - current balance
+    // - exchange rate XLM / USD, XLM / EUR
+  }
 
   render() {
     let { height, width } = Dimensions.get('window');
     return (
-      <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={
+          <RefreshControl
+            refreshing={this.state.refreshing}
+            onRefresh={this.onRefresh}
+            colors={['#08b5e5', '#002348']}
+            progressViewOffset={height * 0.125 - 42}
+          />
+        }
+      >
         <Svg
           style={styles.svgContainer}
-          height={230}
+          height={height * 0.25}
           width={width}
         >
           <Defs>
@@ -30,28 +72,43 @@ export default class BalancePage extends React.Component {
             />
         </RadialGradient>
           </Defs>
-          <Rect x="0" y="0" width={width} height={230} fill="url(#grad)" />
+          <Rect x="0" y="0" width={width} height={height * 0.25} fill="url(#grad)" />
         </Svg>
         <View style={styles.topContainer}>
-          <Text style={styles.balance}>
-            { this.state.balance.toFixed(2) }
-          </Text>
-          <Text style={styles.balanceConverted}>
-            7853.75 EUR
-          </Text>
+          { this.state.isLoadingBalance ? 
+            <ActivityIndicator style={styles.loadingIndicator} size={36} color='#effbf3' />
+            :
+            <View>
+              <Text style={styles.balance}>
+                { FormattingUtils.formatAmount(this.state.balance, 2) } <Text style={styles.balanceCurrency}>XLM</Text>
+              </Text>
+              <Text style={styles.balanceConverted}>
+                7853.75 EUR
+              </Text>
+            </View>
+          }
         </View>
 
         <View style={styles.transactionsContainer}>
           <Text style={styles.heading}>LAST TRANSACTIONS</Text>
-          <View style={styles.transactionItem}>
-            <Text>testsa1234</Text>
-          </View>
-          <View style={styles.transactionItem}>
-            <Text>test2</Text>
-          </View>
-          <View style={styles.transactionItem}>
-            <Text>test3</Text>
-          </View>
+          <Transaction
+            containerStyle={styles.transactionItem}
+            amount={100}
+            date={'01.02.2018'}
+            memo='very very very looooooong memo of something important I guess'
+          />
+          <Transaction
+            containerStyle={styles.transactionItem}
+            amount={-20020.54}
+            date={'12.01.2018'}
+            memo='very very very looooooong memo of something important I guess'
+          />
+          <Transaction
+            containerStyle={styles.transactionItem}
+            memo='test'
+            amount={-20020.54}
+            date={'12.01.2018'}
+          />
           <View style={styles.seeAllButtonContainer}>
             <TouchableNativeFeedback
               style={styles.seeAllButtonRipple}
@@ -64,34 +121,38 @@ export default class BalancePage extends React.Component {
         </View>
 
         <View style={styles.actionsContainer}>
-          <View style={styles.actionReceive}>
-            <TouchableNativeFeedback
-              style={styles.rippleBackground}
-              background={TouchableNativeFeedback.Ripple('#08b5e5', true)}>
-              <View style={styles.actionInnerContainer}>
-                <Svg height={36} width={36}>
-                  <Path d="M0 0h24v24H0z" fill="none"/>
-                  <Path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z" fill='#fff' fillOpacity={1} scale={1.5}/>
-                </Svg>
-              </View>
-            </TouchableNativeFeedback>
-            <Text style={styles.actionCaption}>Receive</Text>
-          </View>
-          <View style={styles.actionSend}>
-            <TouchableNativeFeedback
-              style={styles.rippleBackground}
-              background={TouchableNativeFeedback.Ripple('#08b5e5', true)}>
-              <View style={styles.actionInnerContainer} onPress={() => console.log('test')}>
-                <Svg height={36} width={36}>
-                  <Path d="M0 0h24v24H0z" fill="none"/>
-                  <Path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill='#fff' fillOpacity={1} scale={1.5}/>
-                </Svg>
-              </View>
-            </TouchableNativeFeedback>
-            <Text style={styles.actionCaption}>Send</Text>
+          <View style={styles.actionsInner}>
+            <View>
+              <TouchableNativeFeedback
+                style={styles.rippleBackground}
+                onPress={() => {this.props.navigation.navigate('ReceivePage')}}
+                background={TouchableNativeFeedback.Ripple('#08b5e5', true)}>
+                <View style={styles.actionInnerContainer}>
+                  <Svg height={36} width={36}>
+                    <Path d="M0 0h24v24H0z" fill="none"/>
+                    <Path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z" fill='#fff' fillOpacity={1} scale={1.5}/>
+                  </Svg>
+                </View>
+              </TouchableNativeFeedback>
+              <Text style={styles.actionCaption}>Receive</Text>
+            </View>
+            <View>
+              <TouchableNativeFeedback
+                style={styles.rippleBackground}
+                onPress={() => {this.props.navigation.navigate('SendPage')}}
+                background={TouchableNativeFeedback.Ripple('#08b5e5', true)}>
+                <View style={styles.actionInnerContainer}>
+                  <Svg height={36} width={36}>
+                    <Path d="M0 0h24v24H0z" fill="none"/>
+                    <Path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill='#fff' fillOpacity={1} scale={1.5}/>
+                  </Svg>
+                </View>
+              </TouchableNativeFeedback>
+              <Text style={styles.actionCaption}>Send</Text>
+            </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
     );
   }
 }
@@ -105,8 +166,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
   }, 
   topContainer: {
+    height: '25%',
     width: '100%',
-    paddingBottom: 32,
+    justifyContent: 'center',
   },
   rippleBackground: {
     borderRadius: 500,
@@ -116,15 +178,17 @@ const styles = StyleSheet.create({
     color: '#dfdfdf',
     textAlign: 'center',
     fontFamily: 'sans-serif-light',
-    fontSize: 48,
-    marginTop: 100,
+    fontSize: 36,
+  },
+  balanceCurrency: {
+    fontSize: 16,
+    color: '#dfdfdf',
   },
   balanceConverted: {
     textAlign: 'center',
     fontFamily: 'sans-serif-thin',
     color: '#fff',
     fontSize: 16,
-    marginTop: 8,
   },
   heading: {
     fontFamily: 'sans-serif',
@@ -135,16 +199,18 @@ const styles = StyleSheet.create({
     marginTop: 24
   },
   actionsContainer: {
-    flex: 1,
-    position: 'absolute',
     bottom: 0,
-    right: 0,
-    left: 0,
+    width: '100%',
     paddingLeft: 48,
     paddingRight: 48,
-    marginBottom: 32,
+    paddingTop: 32,
+    paddingBottom: 16,
+  },
+  actionsInner: {
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-around',
+
   },
   actionCaption: {
     fontFamily: 'sans-serif',
@@ -155,7 +221,9 @@ const styles = StyleSheet.create({
   },
   actionInnerContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
+    //justifyContent: 'center',
+    justifyContent: 'space-around',
+    flexDirection: 'row',
     backgroundColor: '#08b5e5',
     borderRadius: 500,
     padding: 24,
@@ -179,7 +247,9 @@ const styles = StyleSheet.create({
   transactionsContainer: {
     width: '100%',
     paddingLeft: 16,
-    paddingRight: 16
+    paddingRight: 16,
+    flex: 1,
+    overflow: 'hidden'
   },
   transactionItem: {
     elevation: 1,
