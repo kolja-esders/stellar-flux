@@ -1,14 +1,20 @@
 import React from 'react';
-import { StyleSheet, Text, View, Dimensions, AsyncStorage } from 'react-native';
-import CodeInput from 'react-native-confirmation-code-input';
+import { StyleSheet, Text, View, Dimensions, AsyncStorage, TextInput } from 'react-native';
 import Svg, { RadialGradient, Rect, Defs, Stop, Path, Use, ClipPath } from 'react-native-svg';
+import { Button } from 'react-native-common';
+import CodeInput from 'react-native-confirmation-code-input';
+//import TouchID from 'react-native-touch-id';
+import SecurityUtils from '../helper/SecurityUtils';
 
 export default class SecuritySetupPage extends React.Component {
 
   async handlePin(pin) {
+    //let salt = SecurityUtils.generateSalt(10)
+    //SecurityUtils.hashPinWithSalt(pin, salt)
     try {
-      await AsyncStorage.setItem('@StellarFluxStore:pinHash', pin);
+      await AsyncStorage.setItem('@Flux:pin', pin);
     } catch (error) {
+      // Error saving data
     }
     this.props.goToNextPage();
   }
@@ -38,6 +44,8 @@ export default class SecuritySetupPage extends React.Component {
           </Defs>
           <Rect x="0" y="0" width={width} height={height} fill="url(#grad)" />
         </Svg>
+
+
         <View style={styles.titleContainer}>
           <Svg height={72} width={72}>
             <Defs>
@@ -53,22 +61,54 @@ export default class SecuritySetupPage extends React.Component {
           </Text>
         </View>
 
+        <View style={styles.content}>
+          <Text style={styles.heading}>
+            CONFIRMATION PIN
+          </Text>
+          <Text style={styles.desc}>
+            Assign a PIN that will be used to confirm transactions in the future.
+          </Text>
+          <Text style={styles.descImportant}>
+            Warning: You will loose access to your funds if you forget your PIN.
+          </Text>
 
-        <Text style={styles.desc}>
-          Enter a 4-digit PIN to access your wallet in the future.
-        </Text>
-        <CodeInput
-          secureTextEntry
-          activeColor='rgba(255, 255, 255, 1)'
-          inactiveColor='rgba(255, 255, 255, 0.3)'
-          codeLength={4}
-          keyboardType="numeric"
-          autoFocus={false}
-          inputPosition='left'
-          onFulfill={(pin) => this.handlePin(pin) }
-          containerStyle={{ marginTop: 20 }}
-          codeInputStyle={{ color: '#fff', backgroundColor: 'rgba(255, 255, 255, 0.05)', fontSize: 24, fontWeight: '800', borderWidth: 0.5, borderColor: '#fff', borderRadius: 3, height: 60, width: 45, marginLeft: 5, marginRight: 5 }}
-        />
+          <View style={styles.codeWrapper}>
+            <CodeInput
+              secureTextEntry
+              activeColor='rgba(255, 255, 255, 1)'
+              inactiveColor='rgba(255, 255, 255, 0.3)'
+              codeLength={4}
+              keyboardType="numeric"
+              autoFocus={false}
+              inputPosition='left'
+              onFulfill={(pin) => this.handlePin(pin) }
+              containerStyle={{ marginTop: 0 }}
+              codeInputStyle={{ color: '#fff', backgroundColor: 'rgba(255, 255, 255, 0.05)', fontSize: 24, fontWeight: '800', borderWidth: 0.5, borderColor: '#fff', borderRadius: 3, height: 60, width: 45, marginLeft: 5, marginRight: 5 }}
+            />
+          </View>
+
+          { false &&
+            <View>
+            <Text style={styles.nextHeading}>
+              FINGERPRINT
+            </Text>
+            <Text style={styles.desc}>
+              Two-factor authentication.{"\n"}Protect your app with a fingerprint.
+            </Text>
+            { !this.state.fingerprintSetupDone?
+              <Button
+                style={styles.createButton}
+                label='Setup fingerprint'
+                size='large'
+                onPress={() => this.handleCreateWallet() }
+                borderRadius={3}
+              />
+              :
+              <Text>done</Text>
+              }
+            </View>
+          }
+        </View>
       </View>
     );
   }
@@ -78,35 +118,66 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: '#000'
+    flexDirection: 'column'
   },
   svgContainer: {
     position: 'absolute',
   }, 
   titleContainer: {
-    flex: 1,
-    flexGrow: 0,
-    marginTop: 116,
-    marginBottom: 32,
+    marginTop: '10%',
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   title: {
     marginLeft: 8,
     fontFamily: 'sans-serif-thin',
     fontSize: 48,
+    color: '#effbf3'
+  },
+  content: {
+    flex: 1,
+    flexGrow: 1,
+    paddingLeft: 64,
+    paddingRight: 64,
+    justifyContent: 'center',
+    marginBottom: '15%'
+  },
+  heading: {
+    fontFamily: 'sans-serif-thin',
     color: '#effbf3',
+    textAlign: 'center',
+    fontFamily: 'sans-serif',
+    fontWeight: '600',
+    fontSize: 20
+  },
+  nextHeading: {
+    color: '#effbf3',
+    textAlign: 'center',
+    fontFamily: 'sans-serif',
+    fontWeight: '600',
+    fontSize: 20,
+    marginTop: 32
   },
   desc: {
-    alignItems: 'center',
-    textAlign: 'center',
-    paddingLeft: 20,
-    paddingRight: 20,
+    marginTop: 8,
+    marginBottom: 8,
     fontFamily: 'sans-serif-thin',
-    fontSize: 24,
-    fontWeight: '300',
+    textAlign: 'center',
     color: '#effbf3',
-    marginTop: 100,
+    fontSize: 14,
+    lineHeight: 24
   },
+  descImportant: {
+    marginBottom: 8,
+    fontFamily: 'sans-serif-light',
+    textAlign: 'center',
+    color: '#effbf3',
+    fontSize: 14,
+    lineHeight: 24
+  },
+  codeWrapper: {
+    height: 60,
+    alignItems: 'center'
+  }
 });
