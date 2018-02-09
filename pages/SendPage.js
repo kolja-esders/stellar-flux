@@ -10,7 +10,7 @@ import Modal from '../components/Modal';
 
 export default class SendPage extends React.Component {
 
-  state = { isModalVisible: false, modalStatus: '', modalTitle: '', isModalLoading: false, txHash: '', confirmed: false }
+  state = { isModalVisible: false, modalStatus: '', modalTitle: '', isModalLoading: false, txHash: '', confirmed: false, recipientAccountId: '' }
 
   async componentWillMount() {
     let secret = await AsyncStorage.getItem('@Flux:secret')
@@ -27,6 +27,12 @@ export default class SendPage extends React.Component {
     }); 
   }
 
+  onRecipientTextChanged = (text) => {
+    console.log(text)
+    let recipientAccountId = text.replace(/[^0-9A-Z]/g, '')
+    this.setState({ ...this.state, recipientAccountId })
+  }
+
   onCloseModalRequest() {
     if (!this.state.isModalLoading) {
       this.setState({ ...this.state, isModalVisible: false, confirmed: false, txHash: '', modalStatus: '', isModalLoading: false, modalStatus: '' })
@@ -34,6 +40,7 @@ export default class SendPage extends React.Component {
   }
 
   confirmTransaction() {
+    // Validate all inputs
     this.setState({ modalTitle: 'Confirm transaction', isModalVisible: true })
   }
 
@@ -64,11 +71,15 @@ export default class SendPage extends React.Component {
             <Text style={styles.title}>RECIPIENT</Text>
             <View style={styles.recipientTextInputContainer}>
               <TextInput
-                ref='recipientInput'
+                ref={(element) => this.test = element }
                 placeholder='GAGNWKCJ3KHRLPM3T...'
                 style={styles.recipientTextInput}
                 autoCorrect={false}
+                autoCapitalize='characters'
+                maxLength={56}
                 underlineColorAndroid='rgba(0,0,0,0)'
+                value={this.state.recipientAccountId}
+                onChangeText={this.onRecipientTextChanged}
               />
             </View>
           </View>
@@ -115,7 +126,7 @@ export default class SendPage extends React.Component {
         >
           <Text style={styles.modalHeading}>{ this.state.modalTitle }</Text>
           { !this.state.confirmed ?
-          <View>
+          <ScrollView style={styles.container} keyboardShouldPersistTaps='handled'>
             <View style={styles.codeWrapper}>
               <CodeInput
                 secureTextEntry
@@ -141,7 +152,7 @@ export default class SendPage extends React.Component {
               onPress={() => this.onCloseModalRequest()}
               label="Cancel"
             />
-          </View>
+          </ScrollView>
           :
             <View>
               { this.state.isModalLoading ?
