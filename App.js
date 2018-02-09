@@ -1,9 +1,11 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Animated, Easing } from 'react-native';
 import { StackNavigator } from 'react-navigation';
 
 import SetupContainerPage from './pages/SetupContainerPage';
 import BalancePage from './pages/BalancePage';
+import SendPage from './pages/SendPage';
+import ReceivePage from './pages/ReceivePage';
 
 const RootStack = StackNavigator({
     SetupPage: {
@@ -12,9 +14,22 @@ const RootStack = StackNavigator({
     BalancePage: {
       screen: BalancePage
     },
+    SendPage: {
+      screen: SendPage
+    },
+    ReceivePage: {
+      screen: ReceivePage
+    },
   }, {
-    initialRouteName: 'SetupPage',
+    initialRouteName: 'BalancePage',
     headerMode: 'none',
+    //transitionConfig : () => ({
+      //transitionSpec: {
+        //duration: 0,
+        //timing: Animated.timing,
+        //easing: Easing.step0,
+      //},
+    //}),
   }
 );
 
