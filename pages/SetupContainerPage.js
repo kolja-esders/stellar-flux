@@ -22,7 +22,7 @@ export default class SetupContainerPage extends React.Component {
         dot={<View style={{backgroundColor: 'rgba(255,255,255,.3)', width: 10, height: 10, borderRadius: 5, marginLeft: 4, marginRight: 4}} />}
         activeDot={<View style={{backgroundColor: '#fff', width: 10, height: 10, borderRadius: 5, marginLeft: 4, marginRight: 4}} />}
         loop={false}
-        paginationStyle={{bottom: 70}}>
+        paginationStyle={{bottom: '5%'}}>
         <WelcomePage goToNextPage={this.nextPageHandler} />
         <SecuritySetupPage goToNextPage={this.nextPageHandler} />
         <WalletSetupPage navigation={this.props.navigation} goToNextPage={this.nextPageHandler} />
