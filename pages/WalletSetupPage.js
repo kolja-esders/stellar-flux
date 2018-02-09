@@ -1,11 +1,37 @@
 import React from 'react';
-import { StyleSheet, Text, View, Dimensions, TextInput } from 'react-native';
+import { StyleSheet, Text, View, Dimensions, TextInput, AsyncStorage, ActivityIndicator } from 'react-native';
 import { Button } from 'react-native-common';
 import Svg, { Path, RadialGradient, Rect, Defs, Stop } from 'react-native-svg';
+import StellarAccount from '../helper/StellarAccount';
 
 export default class WalletSetupPage extends React.Component {
 
-  state = { secretKey: '' }
+  state = { secretKey: '', isCreatingAccount: false }
+
+  handleCreateWallet() {
+    this.setState({ ...this.state, isCreatingAccount: true })
+    try {
+      StellarAccount.createTestAccount().then((result) => {
+        try {
+          AsyncStorage.setItem('@Flux:accountId', result.accountId).then(() => {
+            AsyncStorage.setItem('@Flux:secret', result.secretSeed).then(() => {
+              this.props.navigation.navigate('BalancePage')
+              // Make sure the component is no longer visible before hiding the loading indicator.
+              // TODO: Investigate why lifecycle hooks (componentDidBlur) are not working.
+              setTimeout(() => {
+                this.setState({ ...this.state, isCreatingAccount: false })
+              }, 1000)
+            })
+          })
+        } catch (error) {
+          // Error saving data
+        }
+      })
+    } catch (e) {
+      console.error('Unable to create account:' + e)
+      this.setState({ ...this.state, isCreatingAccount: false })
+    }
+  }
 
   render() {
     let { height, width } = Dimensions.get('window');
@@ -45,24 +71,6 @@ export default class WalletSetupPage extends React.Component {
 
         <View style={styles.content}>
           <Text style={styles.heading}>
-            CREATE
-          </Text>
-          <Text style={styles.desc}>
-            Didn't use Stellar so far?{"\n"}Create a new wallet and get started.
-          </Text>
-          <Button
-            style={styles.createButton}
-            label='Create wallet'
-            size='large'
-            onPress={() => this.props.navigation.navigate('BalancePage') }
-            borderRadius={3}
-          />
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-          <Text style={styles.heading}>
             IMPORT
           </Text>
           <Text style={styles.desc}>
@@ -72,9 +80,34 @@ export default class WalletSetupPage extends React.Component {
             placeholder='Secret key'
             style={styles.keyInput}
             autoCorrect={false}
+            underlineColorAndroid='rgba(0,0,0,0)'
             onChangeText={(secretKey) => this.setState({ secretKey })}
             value={this.state.text}
           />
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <Text style={styles.heading}>
+            CREATE
+          </Text>
+          <Text style={styles.desc}>
+            Didn't use Stellar so far?{"\n"}Create a new wallet and get started.
+          </Text>
+          { !this.state.isCreatingAccount ?
+            <Button
+              style={styles.createButton}
+              label='Create wallet'
+              size='large'
+              onPress={() => this.handleCreateWallet() }
+              borderRadius={3}
+            />
+            :
+            <ActivityIndicator style={styles.loadingIndicator} size={24} color='#effbf3' />
+          }
         </View>
       </View>
     );
@@ -91,10 +124,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   titleContainer: {
-    flex: 1,
-    flexGrow: 0,
-    marginTop: 116,
-    marginBottom: 32,
+    marginTop: '10%',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center'
@@ -117,12 +147,12 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    flexGrow: 1,
     width: '100%',
     paddingLeft: 64,
     paddingRight: 64,
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 70
+    marginBottom: '15%',
   },
   createButton: {
     width: '100%'
@@ -164,5 +194,9 @@ const styles = StyleSheet.create({
     color: '#effbf3',
     fontSize: 14,
     lineHeight: 24
+  },
+  loadingIndicator: {
+    marginTop: 14,
+    marginBottom: 14
   }
 });
