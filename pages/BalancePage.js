@@ -1,14 +1,19 @@
 import React from 'react';
-import { StyleSheet, Text, View, Dimensions, TouchableNativeFeedback, AsyncStorage, ActivityIndicator,  Platform, RefreshControl, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, Dimensions, TouchableNativeFeedback, AsyncStorage, ActivityIndicator,  Platform, RefreshControl, ScrollView, TouchableOpacity } from 'react-native';
 import { Button } from 'react-native-common';
 import Svg, { Path, RadialGradient, Rect, Defs, Stop } from 'react-native-svg';
 import StellarAccount from '../helper/StellarAccount';
 import FormattingUtils from '../helper/FormattingUtils';
+import NavigationUtils from '../helper/NavigationUtils';
 import Transaction from '../components/Transaction';
 
 export default class BalancePage extends React.Component {
   
   state = { balance: 22907.3978986, isLoadingBalance: true, isMounted: true, refreshing: false }
+
+  static navigationOptions = {
+    header: null
+  }
 
   async componentWillMount() {
     let accountId = await AsyncStorage.getItem('@Flux:accountId')
@@ -78,13 +83,18 @@ export default class BalancePage extends React.Component {
           { this.state.isLoadingBalance ? 
             <ActivityIndicator style={styles.loadingIndicator} size={36} color='#effbf3' />
             :
-            <View>
-              <Text style={styles.balance}>
-                { FormattingUtils.formatAmount(this.state.balance, 2) } <Text style={styles.balanceCurrency}>XLM</Text>
-              </Text>
-              <Text style={styles.balanceConverted}>
-                7853.75 EUR
-              </Text>
+            <View style={styles.topInner}>
+              <Svg height={height * 0.125} width={height * 0.125} viewBox='0 0 1792 1792'>
+                <Path d="M1523 1339q-22-155-87.5-257.5t-184.5-118.5q-67 74-159.5 115.5t-195.5 41.5-195.5-41.5-159.5-115.5q-119 16-184.5 118.5t-87.5 257.5q106 150 271 237.5t356 87.5 356-87.5 271-237.5zm-243-699q0-159-112.5-271.5t-271.5-112.5-271.5 112.5-112.5 271.5 112.5 271.5 271.5 112.5 271.5-112.5 112.5-271.5zm512 256q0 182-71 347.5t-190.5 286-285.5 191.5-349 71q-182 0-348-71t-286-191-191-286-71-348 71-348 191-286 286-191 348-71 348 71 286 191 191 286 71 348z" fill='#dfdfdf'/>
+              </Svg>
+              <View style={styles.balanceContainer}>
+                <Text style={styles.balance}>
+                  { FormattingUtils.formatAmount(this.state.balance, 2) } <Text style={styles.balanceCurrency}>XLM</Text>
+                </Text>
+                <Text style={styles.balanceConverted}>
+                  7853.75 EUR
+                </Text>
+              </View>
             </View>
           }
         </View>
@@ -125,7 +135,7 @@ export default class BalancePage extends React.Component {
             <View>
               <TouchableNativeFeedback
                 style={styles.rippleBackground}
-                onPress={() => {this.props.navigation.navigate('ReceivePage')}}
+                onPress={() => {NavigationUtils.navigateWithEffectsTo('ReceivePage', this)}}
                 background={TouchableNativeFeedback.Ripple('#08b5e5', true)}>
                 <View style={styles.actionInnerContainer}>
                   <Svg height={36} width={36}>
@@ -139,7 +149,7 @@ export default class BalancePage extends React.Component {
             <View>
               <TouchableNativeFeedback
                 style={styles.rippleBackground}
-                onPress={() => {this.props.navigation.navigate('SendPage')}}
+                onPress={() => {NavigationUtils.navigateWithEffectsTo('SendPage', this)}}
                 background={TouchableNativeFeedback.Ripple('#08b5e5', true)}>
                 <View style={styles.actionInnerContainer}>
                   <Svg height={36} width={36}>
@@ -261,5 +271,14 @@ const styles = StyleSheet.create({
     paddingRight: 16,
     borderRadius: 3,
     marginBottom: 8
+  },
+  topInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 32
+  },
+  balanceContainer: {
+    flexGrow: 1,
+    marginRight: 32
   }
 });

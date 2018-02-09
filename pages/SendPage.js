@@ -10,6 +10,17 @@ import Modal from '../components/Modal';
 
 export default class SendPage extends React.Component {
 
+  static navigationOptions = {
+    title: 'Send XLM',
+    headerTintColor: '#444',
+    headerStyle: {
+      backgroundColor: '#eee',
+    },
+    headerTitleStyle: {
+      color: '#444',
+    },
+  }
+
   state = { isModalVisible: false, modalStatus: '', modalTitle: '', isModalLoading: false, txHash: '', confirmed: false, recipientAccountId: '' }
 
   async componentWillMount() {

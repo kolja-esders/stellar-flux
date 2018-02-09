@@ -9,6 +9,10 @@ import WalletSetupPage from './WalletSetupPage';
 
 export default class SetupContainerPage extends React.Component {
 
+  static navigationOptions = {
+    header: null
+  }
+
   nextPageHandler = () => {
     this.refs.swiper.scrollBy(1)
   }

@@ -21,15 +21,8 @@ const RootStack = StackNavigator({
       screen: ReceivePage
     },
   }, {
-    initialRouteName: 'BalancePage',
-    headerMode: 'none',
-    //transitionConfig : () => ({
-      //transitionSpec: {
-        //duration: 0,
-        //timing: Animated.timing,
-        //easing: Easing.step0,
-      //},
-    //}),
+    initialRouteName: 'SetupPage',
+    headerMode: 'screen'
   }
 );
 

@@ -6,6 +6,17 @@ import DeviceBrightness from 'react-native-device-brightness';
 
 export default class ReceivePage extends React.Component {
 
+  static navigationOptions = {
+    title: 'Receive XLM',
+    headerTintColor: '#444',
+    headerStyle: {
+      backgroundColor: '#eee',
+    },
+    headerTitleStyle: {
+      color: '#444',
+    },
+  }
+
   state = { accountId: '', isBrightnessIncreased: false, originalBrightness: 0 }
   
   async componentWillMount() {
