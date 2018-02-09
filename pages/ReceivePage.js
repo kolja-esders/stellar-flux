@@ -14,7 +14,9 @@ export default class ReceivePage extends React.Component {
   }
 
   componentWillUnmount() {
-    DeviceBrightness.setBrightnessLevel(this.state.originalBrightness);
+    if (this.state.isBrightnessIncreased) {
+      DeviceBrightness.setBrightnessLevel(this.state.originalBrightness);
+    }
   }
 
   onCodePress = async () => {
