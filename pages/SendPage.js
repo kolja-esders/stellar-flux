@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View, Dimensions, TouchableNativeFeedback, AsyncStorage, ActivityIndicator,  Platform, TextInput, TouchableHighlight, DeviceEventEmitter, Linking, Keyboard } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, Dimensions, TouchableNativeFeedback, AsyncStorage, ActivityIndicator,  Platform, TextInput, TouchableHighlight, TouchableOpacity, DeviceEventEmitter, Linking, Keyboard } from 'react-native';
 import { Button } from 'react-native-common';
 import CodeInput from 'react-native-confirmation-code-input';
 import Svg, { Path, Circle, Defs, Stop, RadialGradient, Rect } from 'react-native-svg';
@@ -7,6 +7,7 @@ import StellarAccount from '../helper/StellarAccount';
 import FormattingUtils from '../helper/FormattingUtils';
 import Transaction from '../components/Transaction';
 import Modal from '../components/Modal';
+import ValidatedTextInput from '../components/ValidatedTextInput';
 
 export default class SendPage extends React.Component {
 
@@ -21,7 +22,7 @@ export default class SendPage extends React.Component {
     },
   }
 
-  state = { isModalVisible: false, modalStatus: '', modalTitle: '', isModalLoading: false, txHash: '', confirmed: false, recipientAccountId: '' }
+  state = { isModalVisible: false, modalStatus: '', modalTitle: '', isModalLoading: false, txHash: '', confirmed: false, recipientAccountId: '', recipientValidationError: false, isSendButtonDisabled: true, recipientValidationSuccess: false, recipientDetails: '', amount: '', amountValidationError: false, amountValidationSuccess: false, amountValidationErrorMessage: '', recipientValidationErrorMessage: '' }
 
   async componentWillMount() {
     let secret = await AsyncStorage.getItem('@Flux:secret')
@@ -39,9 +40,8 @@ export default class SendPage extends React.Component {
   }
 
   onRecipientTextChanged = (text) => {
-    console.log(text)
     let recipientAccountId = text.replace(/[^0-9A-Z]/g, '')
-    this.setState({ ...this.state, recipientAccountId })
+    this.setState({ ...this.state, recipientAccountId, recipientDetails: '', recipientValidationSuccess: false })
   }
 
   onCloseModalRequest() {
@@ -63,6 +63,52 @@ export default class SendPage extends React.Component {
     }
   }
 
+  onRecipientInputFocus = () => {
+    this.setState({ ...this.state, recipientValidationError: false })
+  }
+  
+  onRecipientBlur = async () => {
+    const recipient = this.state.recipientAccountId
+    if (recipient === '') {
+      return
+    }
+
+    // Check if the format of the account id is valid
+    let isValid = await StellarAccount.isValidAccountId(recipient)
+    if (!isValid) {
+      this.setState({ ...this.state, recipientValidationSuccess: false, recipientValidationError: true, recipientValidationErrorMessage: 'Invalid account id' })
+      return;
+    }
+
+    // Check if the account id is known to be associated with an exchange.
+    const EXCHANGES = new Map([
+      ['GCGNWKCJ3KHRLPM3TM6N7D3W5YKDJFL6A2YCXFXNMRTZ4Q66MEMZ6FI2', 'Poloniex'],
+      ['GBSTRH4QOTWNSVA6E4HFERETX4ZLSR3CIUBLK7AXYII277PFJC4BBYOG', 'Stronghold'],
+      ['GC4KAS6W2YCGJGLP633A6F6AKTCV4WSLMTMIQRSEQE5QRRVKSX7THV6S', 'BitcoinIndonesia'],
+      ['GB6YPGW5JFMMP2QB2USQ33EUWTXVL4ZT5ITUNCY3YKVWOJPP57CANOF3', 'Bittrex'],
+      ['GA5XIGA5C7QTPTWXQHY6MCJRMTRZDOSHR6EFIBNDQTCQHG262N4GGKTM', 'Kraken']
+    ])
+    const recipientDetails = EXCHANGES.has(recipient) ? EXCHANGES.get(recipient) : ''
+
+    this.setState({ ...this.state, recipientValidationError: false, recipientValidationSuccess: true, recipientDetails })
+  }
+
+  onAmountChanged = (amount) => {
+    this.setState({ ...this.state, amount })
+  }
+
+  onMaxAmountPressed = () => {
+    this.setState({ ...this.state, amount: '10,000', amountValidationSuccess: true, amountValidationError: false })
+  }
+
+  onAmountBlur = () => {
+    // Validate
+  }
+
+  onAmountFocus = () => {
+    this.setState({ ...this.state, amountValidationError: false })
+  }
+
   render() {
     let { height, width } = Dimensions.get('window');
     return (
@@ -79,23 +125,33 @@ export default class SendPage extends React.Component {
 
         <ScrollView style={styles.container} keyboardShouldPersistTaps='handled'>
           <View style={styles.recipientContainer}>
-            <Text style={styles.title}>RECIPIENT</Text>
+            <View style={styles.inputHeadingContainer}>
+              <Text style={styles.title}>RECIPIENT</Text>
+              <Text style={styles.recipientDetails}>{ this.state.recipientDetails }</Text>
+            </View>
             <View style={styles.recipientTextInputContainer}>
-              <TextInput
-                ref={(element) => this.test = element }
+              <ValidatedTextInput
                 placeholder='GAGNWKCJ3KHRLPM3T...'
-                style={styles.recipientTextInput}
+                inputStyle={styles.recipientTextInput}
                 autoCorrect={false}
                 autoCapitalize='characters'
+                onFocus={this.onRecipientInputFocus}
                 maxLength={56}
                 underlineColorAndroid='rgba(0,0,0,0)'
                 value={this.state.recipientAccountId}
                 onChangeText={this.onRecipientTextChanged}
+                isError={this.state.recipientValidationError}
+                isSuccess={this.state.recipientValidationSuccess}
+                showTooltipByDefault={true}
+                errorMessage={this.state.recipientValidationErrorMessage}
+                onBlur={this.onRecipientBlur}
               />
             </View>
           </View>
           <View style={styles.memoContainer}>
-            <Text style={styles.title}>DETAILS</Text>
+            <View style={styles.inputHeadingContainer}>
+              <Text style={styles.title}>DETAILS</Text>
+            </View>
             <TextInput
               ref='memoInput'
               placeholder='Memo (optional)'
@@ -105,20 +161,32 @@ export default class SendPage extends React.Component {
             />
           </View>
 
-          <Text style={styles.title}>AMOUNT</Text>
-          <TextInput
-            ref='amountInput'
+          <View style={styles.inputHeadingContainer}>
+            <Text style={styles.title}>AMOUNT</Text>
+            <TouchableOpacity onPress={this.onMaxAmountPressed}>
+              <Text style={styles.maxAmount}>(max. 10,000 XLM)</Text>
+            </TouchableOpacity>
+          </View>
+        <ValidatedTextInput
             placeholder='100.00 XLM'
             keyboardType='numeric'
-            style={styles.amountInput}
+            onFocus={this.onAmountFocus}
             autoCorrect={false}
+            value={this.state.amount}
+            onChangeText={this.onAmountChanged}
             underlineColorAndroid='rgba(0,0,0,0)'
+            isError={this.state.amountValidationError}
+            isSuccess={this.state.amountValidationSuccess}
+            showTooltipByDefault={true}
+            errorMessage={this.state.amountValidationErrorMessage}
+            onBlur={this.onAmountBlur}
           />
-
           <Button
+            style={{marginTop: 32, elevation: 2}}
             label='Send XLM'
             size='large'
             borderRadius={3}
+            disabled={this.state.isSendButtonDisabled}
             onPress={() => this.confirmTransaction() }
           />
           <View style={styles.confirmationInfoContainer}>
@@ -222,14 +290,6 @@ const styles = StyleSheet.create({
     paddingTop: 8
   },
   recipientTextInput: {
-    fontFamily: 'sans-serif-light',
-    backgroundColor: '#fff',
-    borderRadius: 3,
-    paddingLeft: 16,
-    paddingRight: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
-    flexGrow: 1,
   },
   recipientTextInputContainer: {
     flexDirection: 'row',
@@ -244,13 +304,10 @@ const styles = StyleSheet.create({
     lineHeight: 24
   },
   title: {
-    paddingTop: 32,
-    paddingBottom: 8,
-    width: '100%',
     color: '#effbf3',
     fontFamily: 'sans-serif',
     fontWeight: '600',
-    fontSize: 20
+    fontSize: 20,
   },
   titleDivider: {
     width: '100%',
@@ -261,8 +318,6 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   memoContainer: {
-    //marginTop: 16,
-    //marginBottom: 16,
     width: '100%'
   },
   memoInput: {
@@ -272,8 +327,7 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     paddingRight: 16,
     paddingTop: 12,
-    //paddingBottom: 12,
-    //marginTop: 16,
+    elevation: 2
   },
   confirmationInfo: {
     fontFamily: 'sans-serif-thin',
@@ -319,10 +373,6 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-  },
-  ripple: {
-    //flexGrow: 1,
-    //padding: 24,
   },
   buttonWrap: {
     flex: 1,
@@ -400,4 +450,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#888',
   },
+  inputHeadingContainer: {
+    flexDirection: 'row',
+    paddingTop: 32,
+    paddingBottom: 8,
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  recipientDetails: {
+    fontFamily: 'sans-serif-light',
+    color: '#effbf3',
+    fontSize: 14,
+    lineHeight: 20
+  },
+  maxAmount: {
+    fontFamily: 'sans-serif-light',
+    color: '#effbf3',
+    fontSize: 14,
+    lineHeight: 20
+  }
 });
