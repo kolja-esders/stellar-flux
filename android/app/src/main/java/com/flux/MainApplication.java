@@ -3,6 +3,7 @@ package com.flux;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import com.oblador.vectoricons.VectorIconsPackage;
 import org.capslock.RNDeviceBrightness.RNDeviceBrightness;
 import com.horcrux.svg.SvgPackage;
 import com.rnfingerprint.FingerprintAuthPackage;
@@ -27,6 +28,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
               new MainReactPackage(),
+            new VectorIconsPackage(),
             new RNDeviceBrightness(),
               new SvgPackage(),
               new FingerprintAuthPackage(),
