@@ -78,6 +78,8 @@ project.ext.react = [
 
 apply from: "../../node_modules/react-native/react.gradle"
 
+apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+
 /**
  * Set this to true to create two separate APKs instead of one:
  *   - An APK that only works on ARM devices
@@ -107,6 +109,16 @@ android {
             abiFilters "armeabi-v7a", "x86"
         }
     }
+    signingConfigs {
+        release {
+            if (project.hasProperty('FLUX_RELEASE_STORE_FILE')) {
+                storeFile file(FLUX_RELEASE_STORE_FILE)
+                storePassword FLUX_RELEASE_STORE_PASSWORD
+                keyAlias FLUX_RELEASE_KEY_ALIAS
+                keyPassword FLUX_RELEASE_KEY_PASSWORD
+            }
+        }
+    }
     splits {
         abi {
             reset()
@@ -119,6 +131,7 @@ android {
         release {
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            signingConfig signingConfigs.release
         }
     }
     // applicationVariants are e.g. debug, release
@@ -137,6 +150,7 @@ android {
 }
 
 dependencies {
+    compile project(':react-native-vector-icons')
     compile project(':react-native-device-brightness')
     implementation project(':react-native-touch-id')
     implementation "com.android.support:appcompat-v7:23.4.0"
