@@ -1,13 +1,14 @@
-import { sha256 } from 'react-native-sha256';
 
 export default class SecurityUtils {
 
-  async static hashPin(pin) {
-    const hash = await sha256("pin")
-    const dx = a.x - b.x;
-    const dy = a.y - b.y;
+  //static generateSalt(length) {
+    //console.log('test' + length)
+    //return bcrypt.genSaltSync(length);
+  //}
 
-    return Math.hypot(dx, dy);
-  }
+  //static hashPinWithSalt(pin, salt) {
+    //const hash = bcrypt.hashSync(pin, salt);
+    //console.log(salt, hash)
+  //}
 
 }
