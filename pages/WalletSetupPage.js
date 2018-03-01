@@ -2,9 +2,19 @@ import React from 'react';
 import { StyleSheet, Text, View, Dimensions, TextInput, AsyncStorage, ActivityIndicator } from 'react-native';
 import { Button } from 'react-native-common';
 import Svg, { Path, RadialGradient, Rect, Defs, Stop } from 'react-native-svg';
+import { connect } from "react-redux";
 import StellarAccount from '../helper/StellarAccount';
+import { setAccountId, setSecret, setBalance } from "../actions";
 
-export default class WalletSetupPage extends React.Component {
+const mapDispatchToProps = dispatch => {
+  return {
+    setAccountId: accountId => dispatch(setAccountId(accountId)),
+    setSecret: secret => dispatch(setSecret(secret)),
+    setBalance: balance => dispatch(setBalance(balance))
+  };
+};
+
+class WalletSetupPage extends React.Component {
 
   state = { secretKey: '', isCreatingAccount: false }
 
@@ -12,20 +22,14 @@ export default class WalletSetupPage extends React.Component {
     this.setState({ ...this.state, isCreatingAccount: true })
     try {
       StellarAccount.createTestAccount().then((result) => {
-        try {
-          AsyncStorage.setItem('@Flux:accountId', result.accountId).then(() => {
-            AsyncStorage.setItem('@Flux:secret', result.secretSeed).then(() => {
-              this.props.navigation.navigate('BalancePage')
-              // Make sure the component is no longer visible before hiding the loading indicator.
-              // TODO: Investigate why lifecycle hooks (componentDidBlur) are not working.
-              setTimeout(() => {
-                this.setState({ ...this.state, isCreatingAccount: false })
-              }, 1000)
-            })
-          })
-        } catch (error) {
-          // Error saving data
-        }
+        this.props.setAccountId(result.accountId);
+        this.props.setSecret(result.secretSeed);
+
+        StellarAccount.getBalance(result.accountId).then((balance) => {
+          this.props.setBalance(balance);
+        })
+
+        this.props.navigation.navigate('BalancePage');
       })
     } catch (e) {
       console.error('Unable to create account:' + e)
@@ -113,6 +117,8 @@ export default class WalletSetupPage extends React.Component {
     );
   }
 }
+
+export default connect(null, mapDispatchToProps)(WalletSetupPage);
 
 const styles = StyleSheet.create({
   container: {

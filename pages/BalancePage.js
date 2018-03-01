@@ -1,27 +1,40 @@
 import React from 'react';
-import { StyleSheet, Text, View, Dimensions, TouchableNativeFeedback, AsyncStorage, ActivityIndicator,  Platform, RefreshControl, ScrollView, TouchableOpacity } from 'react-native';
+import { StatusBar, StyleSheet, Text, View, Dimensions, TouchableNativeFeedback, AsyncStorage, ActivityIndicator,  Platform, RefreshControl, ScrollView, TouchableOpacity } from 'react-native';
 import { Button } from 'react-native-common';
 import Svg, { Path, RadialGradient, Rect, Defs, Stop } from 'react-native-svg';
+import { connect } from "react-redux";
+import ActionButton from 'react-native-action-button';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import StellarAccount from '../helper/StellarAccount';
 import FormattingUtils from '../helper/FormattingUtils';
 import NavigationUtils from '../helper/NavigationUtils';
 import Transaction from '../components/Transaction';
 
-export default class BalancePage extends React.Component {
+const mapStateToProps = state => ({
+  accountId: state.account.id,
+  balance: state.account.balance
+})
+
+class BalancePage extends React.Component {
   
-  state = { balance: 22907.3978986, isLoadingBalance: true, isMounted: true, refreshing: false }
+  state = { isLoadingBalance: false, isMounted: true, refreshing: false }
 
   static navigationOptions = {
     header: null
   }
 
   async componentWillMount() {
-    let accountId = await AsyncStorage.getItem('@Flux:accountId')
-    console.log('accountId: ', accountId)
-    let balance = await StellarAccount.getBalance(accountId)
-    if (this.state.isMounted) {
-      this.setState({ balance, isLoadingBalance: false })
-    }
+    let test = await StellarAccount.getTransactions(this.props.accountId)
+    console.log(test)
+
+    //if (!this.props.balance && this.state.isMounted) {
+      //this.setState({ ...state, isLoadingBalance: true })
+    //}
+    //let balance = await StellarAccount.getBalance(this.props.accountId)
+
+    //if (this.state.isMounted) {
+      //this.setState({ isLoadingBalance: false })
+    //}
   }
 
   componentWillUnmount() {
@@ -58,38 +71,21 @@ export default class BalancePage extends React.Component {
           />
         }
       >
-        <Svg
-          style={styles.svgContainer}
-          height={height * 0.25}
-          width={width}
-        >
-          <Defs>
-<RadialGradient id="grad" cx="200%" cy="200%" rx={2*height} ry={2*height} fx="50%" fy="50%" gradientUnits="userSpaceOnUse">
-            <Stop
-                offset="0%"
-                stopColor="#002348"
-                stopOpacity="1"
-            />
-            <Stop
-                offset="100%"
-                stopColor="#08B5E5"
-                stopOpacity="1"
-            />
-        </RadialGradient>
-          </Defs>
-          <Rect x="0" y="0" width={width} height={height * 0.25} fill="url(#grad)" />
-        </Svg>
+      <StatusBar
+         backgroundColor="#1976D2"
+         barStyle="light-content"
+       />
         <View style={styles.topContainer}>
           { this.state.isLoadingBalance ? 
             <ActivityIndicator style={styles.loadingIndicator} size={36} color='#effbf3' />
             :
             <View style={styles.topInner}>
               <Svg height={height * 0.125} width={height * 0.125} viewBox='0 0 1792 1792'>
-                <Path d="M1523 1339q-22-155-87.5-257.5t-184.5-118.5q-67 74-159.5 115.5t-195.5 41.5-195.5-41.5-159.5-115.5q-119 16-184.5 118.5t-87.5 257.5q106 150 271 237.5t356 87.5 356-87.5 271-237.5zm-243-699q0-159-112.5-271.5t-271.5-112.5-271.5 112.5-112.5 271.5 112.5 271.5 271.5 112.5 271.5-112.5 112.5-271.5zm512 256q0 182-71 347.5t-190.5 286-285.5 191.5-349 71q-182 0-348-71t-286-191-191-286-71-348 71-348 191-286 286-191 348-71 348 71 286 191 191 286 71 348z" fill='#dfdfdf'/>
+                <Path d="M1523 1339q-22-155-87.5-257.5t-184.5-118.5q-67 74-159.5 115.5t-195.5 41.5-195.5-41.5-159.5-115.5q-119 16-184.5 118.5t-87.5 257.5q106 150 271 237.5t356 87.5 356-87.5 271-237.5zm-243-699q0-159-112.5-271.5t-271.5-112.5-271.5 112.5-112.5 271.5 112.5 271.5 271.5 112.5 271.5-112.5 112.5-271.5zm512 256q0 182-71 347.5t-190.5 286-285.5 191.5-349 71q-182 0-348-71t-286-191-191-286-71-348 71-348 191-286 286-191 348-71 348 71 286 191 191 286 71 348z" fill='#fff'/>
               </Svg>
               <View style={styles.balanceContainer}>
                 <Text style={styles.balance}>
-                  { FormattingUtils.formatAmount(this.state.balance, 2) } <Text style={styles.balanceCurrency}>XLM</Text>
+                  { FormattingUtils.formatAmount(this.props.balance, 2) } <Text style={styles.balanceCurrency}>XLM</Text>
                 </Text>
                 <Text style={styles.balanceConverted}>
                   7853.75 EUR
@@ -100,77 +96,48 @@ export default class BalancePage extends React.Component {
         </View>
 
         <View style={styles.transactionsContainer}>
-          <Text style={styles.heading}>LAST TRANSACTIONS</Text>
           <Transaction
             containerStyle={styles.transactionItem}
             amount={100}
             date={'01.02.2018'}
             memo='very very very looooooong memo of something important I guess'
           />
+          <View style={styles.itemDivider} />
           <Transaction
             containerStyle={styles.transactionItem}
             amount={-20020.54}
             date={'12.01.2018'}
             memo='very very very looooooong memo of something important I guess'
           />
+          <View style={styles.itemDivider} />
           <Transaction
             containerStyle={styles.transactionItem}
             memo='test'
             amount={-20020.54}
             date={'12.01.2018'}
           />
-          <View style={styles.seeAllButtonContainer}>
-            <TouchableNativeFeedback
-              style={styles.seeAllButtonRipple}
-              background={TouchableNativeFeedback.Ripple('rgba(0, 0, 0, 0.26)', true)}>
-              <View>
-                <Text style={styles.seeAllButton}>See all transactions</Text>
-              </View>
-            </TouchableNativeFeedback>
-          </View>
         </View>
 
-        <View style={styles.actionsContainer}>
-          <View style={styles.actionsInner}>
-            <View>
-              <TouchableNativeFeedback
-                style={styles.rippleBackground}
-                onPress={() => {NavigationUtils.navigateWithEffectsTo('ReceivePage', this)}}
-                background={TouchableNativeFeedback.Ripple('#08b5e5', true)}>
-                <View style={styles.actionInnerContainer}>
-                  <Svg height={36} width={36}>
-                    <Path d="M0 0h24v24H0z" fill="none"/>
-                    <Path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z" fill='#fff' fillOpacity={1} scale={1.5}/>
-                  </Svg>
-                </View>
-              </TouchableNativeFeedback>
-              <Text style={styles.actionCaption}>Receive</Text>
-            </View>
-            <View>
-              <TouchableNativeFeedback
-                style={styles.rippleBackground}
-                onPress={() => {NavigationUtils.navigateWithEffectsTo('SendPage', this)}}
-                background={TouchableNativeFeedback.Ripple('#08b5e5', true)}>
-                <View style={styles.actionInnerContainer}>
-                  <Svg height={36} width={36}>
-                    <Path d="M0 0h24v24H0z" fill="none"/>
-                    <Path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill='#fff' fillOpacity={1} scale={1.5}/>
-                  </Svg>
-                </View>
-              </TouchableNativeFeedback>
-              <Text style={styles.actionCaption}>Send</Text>
-            </View>
-          </View>
-        </View>
+        <ActionButton buttonColor="#2979FF" fixNativeFeedbackRadius={true}>
+          <ActionButton.Item buttonColor='#fff' title="Send XLM" onPress={() => NavigationUtils.navigateWithEffectsTo('SendPage', this)}>
+            <Icon name="send" size={24} />
+          </ActionButton.Item>
+          <ActionButton.Item buttonColor='#fff' title="Receive XLM" onPress={() => NavigationUtils.navigateWithEffectsTo('ReceivePage', this)}>
+            <Icon name="mail" size={24} />
+          </ActionButton.Item>
+        </ActionButton>
       </ScrollView>
     );
   }
 }
 
+export default connect(mapStateToProps)(BalancePage);
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center'
+    alignItems: 'center',
+    backgroundColor: '#fff'
   },
   svgContainer: {
     position: 'absolute',
@@ -179,34 +146,39 @@ const styles = StyleSheet.create({
     height: '25%',
     width: '100%',
     justifyContent: 'center',
+    elevation: 8,
+    backgroundColor: '#2196F3'
   },
   rippleBackground: {
     borderRadius: 500,
     padding: 24,
   },
   balance: {
-    color: '#dfdfdf',
+    color: '#fff',
     textAlign: 'center',
-    fontFamily: 'sans-serif-light',
     fontSize: 36,
   },
   balanceCurrency: {
     fontSize: 16,
-    color: '#dfdfdf',
+    color: '#fff',
   },
   balanceConverted: {
     textAlign: 'center',
-    fontFamily: 'sans-serif-thin',
-    color: '#fff',
+    fontFamily: 'sans-serif-medium',
+    color: '#FAFAFA',
     fontSize: 16,
   },
   heading: {
     fontFamily: 'sans-serif',
-    fontWeight: '600',
+    fontWeight: '400',
     fontSize: 16,
-    color: '#888',
-    marginBottom: 8,
-    marginTop: 24
+    color: '#9E9E9E',
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingLeft: 16,
+    paddingRight: 16,
+    marginTop: 8,
+    marginBottom: 8
   },
   actionsContainer: {
     bottom: 0,
@@ -238,39 +210,24 @@ const styles = StyleSheet.create({
     borderRadius: 500,
     padding: 24,
   },
-  dividerLine: {
-    //marginTop: 32,
-    //marginBottom: 32,
-    width: '20%',
-    borderBottomColor: '#08b5e5',
+  itemDivider: {
+    borderBottomColor: '#e0e0e0',
     borderBottomWidth: StyleSheet.hairlineWidth
-  },
-  seeAllButton: {
-    textAlign: 'center',
-    color: '#888',
-    width: '100%',
-    padding: 16
-  },
-  seeAllButtonContainer: {
-    borderRadius: 3
   },
   transactionsContainer: {
     width: '100%',
-    paddingLeft: 16,
-    paddingRight: 16,
+    //paddingLeft: 16,
+    //paddingRight: 16,
     flex: 1,
     overflow: 'hidden'
   },
   transactionItem: {
-    elevation: 1,
     width: '100%',
-    backgroundColor: '#fff',
     paddingTop: 16,
     paddingBottom: 16,
     paddingLeft: 16,
     paddingRight: 16,
-    borderRadius: 3,
-    marginBottom: 8
+    height: 72
   },
   topInner: {
     flexDirection: 'row',

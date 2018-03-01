@@ -1,13 +1,18 @@
 import React from 'react';
 import { StyleSheet, Text, View, Dimensions } from 'react-native';
-import Svg,{
-    RadialGradient,
-    Rect,
-    Defs,
-    Stop
-} from 'react-native-svg';
+import Svg, { RadialGradient, Rect, Defs, Stop } from 'react-native-svg';
+import { connect } from "react-redux";
 
-export default class WelcomePage extends React.Component {
+const mapStateToProps = state => ({
+  accountId: state.account.id,
+})
+
+class WelcomePage extends React.Component {
+
+  componentWillMount() {
+    console.log('fuck ey', this.props.accountId)
+  }
+
   render() {
     let { height, width } = Dimensions.get('window');
     return (
@@ -40,6 +45,8 @@ export default class WelcomePage extends React.Component {
     );
   }
 }
+
+export default connect(mapStateToProps)(WelcomePage);
 
 const styles = StyleSheet.create({
   container: {

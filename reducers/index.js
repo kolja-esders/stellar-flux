@@ -1,18 +1,24 @@
-import { SET_ACCOUNT_ID } from "../actions/action-types";
+import { SET_ACCOUNT_ID, SET_SECRET, SET_BALANCE } from "../actions/action-types";
 
 const initialState = {
-  accountId: ''
+  id: '',
+  secret: '',
+  balance: 0.0
 };
  
-const dataReducer = (state = initialState, action) => {
+const account = (state = initialState, action) => {
   switch (action.type) {
     case SET_ACCOUNT_ID:
-      return { ...state, accountId: action.payload }
+      return { ...state, id: action.payload }
+    case SET_SECRET:
+      return { ...state, secret: action.payload }
+    case SET_BALANCE:
+      return { ...state, balance: action.payload }
     default:
       return state;
   }
 };
  
 export default {
-  rootReducer
+  account
 }

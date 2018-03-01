@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View, Dimensions, TouchableNativeFeedback, AsyncStorage, ActivityIndicator,  Platform, TextInput, TouchableHighlight, TouchableOpacity, DeviceEventEmitter, Linking, Keyboard } from 'react-native';
 import { Button } from 'react-native-common';
+import { connect } from "react-redux";
 import CodeInput from 'react-native-confirmation-code-input';
 import Svg, { Path, Circle, Defs, Stop, RadialGradient, Rect } from 'react-native-svg';
 import StellarAccount from '../helper/StellarAccount';
@@ -9,24 +10,29 @@ import Transaction from '../components/Transaction';
 import Modal from '../components/Modal';
 import ValidatedTextInput from '../components/ValidatedTextInput';
 
-export default class SendPage extends React.Component {
+const mapStateToProps = state => ({
+  accountId: state.account.id,
+  balance: state.account.balance,
+  secret: state.account.secret
+})
+
+class SendPage extends React.Component {
 
   static navigationOptions = {
     title: 'Send XLM',
-    headerTintColor: '#444',
+    headerTintColor: '#fff',
     headerStyle: {
-      backgroundColor: '#eee',
+      backgroundColor: '#2196F3'
     },
     headerTitleStyle: {
-      color: '#444',
+      color: '#fff',
     },
   }
 
-  state = { isModalVisible: false, modalStatus: '', modalTitle: '', isModalLoading: false, txHash: '', confirmed: false, recipientAccountId: '', recipientValidationError: false, isSendButtonDisabled: true, recipientValidationSuccess: false, recipientDetails: '', amount: '', amountValidationError: false, amountValidationSuccess: false, amountValidationErrorMessage: '', recipientValidationErrorMessage: '' }
+  state = { isModalVisible: false, modalStatus: '', modalTitle: '', isModalLoading: false, txHash: '', confirmed: false, recipientAccountId: '', recipientValidationError: false, isSendButtonDisabled: false, recipientValidationSuccess: false, recipientDetails: '', amount: '', amountValidationError: false, amountValidationSuccess: false, amountValidationErrorMessage: '', recipientValidationErrorMessage: '' }
 
   async componentWillMount() {
-    let secret = await AsyncStorage.getItem('@Flux:secret')
-    StellarAccount.initializeWithSecretKey(secret)
+    StellarAccount.initializeWithSecretKey(this.props.secret)
 
     DeviceEventEmitter.addListener('EV_SOURCE_ACCOUNT_UPDATED', (e) => {
       this.setState({ ...this.state, modalStatus: 'Building transaction…' })
@@ -86,7 +92,8 @@ export default class SendPage extends React.Component {
       ['GBSTRH4QOTWNSVA6E4HFERETX4ZLSR3CIUBLK7AXYII277PFJC4BBYOG', 'Stronghold'],
       ['GC4KAS6W2YCGJGLP633A6F6AKTCV4WSLMTMIQRSEQE5QRRVKSX7THV6S', 'BitcoinIndonesia'],
       ['GB6YPGW5JFMMP2QB2USQ33EUWTXVL4ZT5ITUNCY3YKVWOJPP57CANOF3', 'Bittrex'],
-      ['GA5XIGA5C7QTPTWXQHY6MCJRMTRZDOSHR6EFIBNDQTCQHG262N4GGKTM', 'Kraken']
+      ['GA5XIGA5C7QTPTWXQHY6MCJRMTRZDOSHR6EFIBNDQTCQHG262N4GGKTM', 'Kraken'],
+      ['GBV4ZDEPNQ2FKSPKGJP2YKDAIZWQ2XKRQD4V4ACH3TCTFY6KPY3OAVS7', 'Changelly']
     ])
     const recipientDetails = EXCHANGES.has(recipient) ? EXCHANGES.get(recipient) : ''
 
@@ -270,6 +277,8 @@ export default class SendPage extends React.Component {
     );
   }
 }
+
+export default connect(mapStateToProps)(SendPage);
 
 const styles = StyleSheet.create({
   outer: {

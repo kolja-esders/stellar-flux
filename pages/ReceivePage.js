@@ -8,12 +8,12 @@ export default class ReceivePage extends React.Component {
 
   static navigationOptions = {
     title: 'Receive XLM',
-    headerTintColor: '#444',
+    headerTintColor: '#fff',
     headerStyle: {
-      backgroundColor: '#eee',
+      backgroundColor: '#2196F3'
     },
     headerTitleStyle: {
-      color: '#444',
+      color: '#fff',
     },
   }
 

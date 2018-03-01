@@ -1,5 +1,6 @@
 import { compose, applyMiddleware, createStore } from "redux";
 import { persistStore, persistCombineReducers } from "redux-persist";
+import logger from 'redux-logger';
 import createSensitiveStorage from "redux-persist-sensitive-storage";
 import reducers from "./reducers";
 
@@ -15,7 +16,10 @@ const config = {
 
 const reducer = persistCombineReducers(config, reducers);
 
-let store = createStore(reducer);
+let store = createStore(
+  reducer,
+  applyMiddleware(logger)
+);
 let persistor = persistStore(store);
 
-export default { store, persistor }
+export { store, persistor }
