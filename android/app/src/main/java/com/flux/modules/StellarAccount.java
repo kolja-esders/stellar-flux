@@ -8,7 +8,10 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeArray;
+import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import org.stellar.sdk.Account;
@@ -19,12 +22,18 @@ import org.stellar.sdk.Network;
 import org.stellar.sdk.PaymentOperation;
 import org.stellar.sdk.Server;
 import org.stellar.sdk.Transaction;
+import org.stellar.sdk.requests.PaymentsRequestBuilder;
 import org.stellar.sdk.responses.AccountResponse;
+import org.stellar.sdk.responses.Page;
 import org.stellar.sdk.responses.SubmitTransactionResponse;
+import org.stellar.sdk.responses.operations.OperationResponse;
+import org.stellar.sdk.responses.operations.PaymentOperationResponse;
+import org.stellar.sdk.xdr.AssetType;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.List;
 import java.util.Scanner;
 
 import javax.annotation.Nullable;
@@ -259,6 +268,51 @@ public class StellarAccount extends ReactContextBaseJavaModule {
       // already built transaction:
       // SubmitTransactionResponse response = server.submitTransaction(transaction);
     }
+  }
+
+  @ReactMethod
+  public static void getTransactions(final String accountId, Promise promise) {
+    Network.useTestNetwork();
+    Server server = new Server(HORIZON_TESTNET_URL);
+
+    KeyPair account = KeyPair.fromAccountId(accountId);
+
+    PaymentsRequestBuilder paymentsRequest = server.payments().forAccount(account);
+
+    WritableArray txs = new WritableNativeArray();
+
+    try {
+      List<OperationResponse> transactions = paymentsRequest.execute().getRecords();
+      System.out.println("tx size: " + transactions.size());
+
+      for (OperationResponse t : transactions) {
+       if (t.getType().equals("payment")) {
+         PaymentOperationResponse paymentOp = (PaymentOperationResponse) t;
+         if (!paymentOp.getAsset().equals(new AssetTypeNative())) {
+           continue;
+         }
+         String amount = paymentOp.getAmount();
+         KeyPair from = paymentOp.getFrom();
+         KeyPair to = paymentOp.getTo();
+
+         String date = paymentOp.getCreatedAt();
+
+         System.out.println(amount + "XLM , from: " + from.toString() + ", to: " + to.toString());
+
+         WritableMap tx = new WritableNativeMap();
+         tx.putString("amount", amount);
+         tx.putString("from", from.getAccountId());
+         tx.putString("to", to.getAccountId());
+         tx.putString("date", date);
+
+         txs.pushMap(tx);
+       }
+      }
+    } catch (IOException e) {
+      promise.reject(e);
+    }
+
+    promise.resolve(txs);
   }
 
   @ReactMethod
