@@ -1,33 +1,17 @@
 import React from 'react';
-import { StyleSheet, Text, View, Animated, Easing } from 'react-native';
-import { StackNavigator } from 'react-navigation';
-
-import SetupContainerPage from './pages/SetupContainerPage';
-import BalancePage from './pages/BalancePage';
-import SendPage from './pages/SendPage';
-import ReceivePage from './pages/ReceivePage';
-
-const RootStack = StackNavigator({
-    SetupPage: {
-      screen: SetupContainerPage
-    },
-    BalancePage: {
-      screen: BalancePage
-    },
-    SendPage: {
-      screen: SendPage
-    },
-    ReceivePage: {
-      screen: ReceivePage
-    },
-  }, {
-    initialRouteName: 'SetupPage',
-    headerMode: 'screen'
-  }
-);
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react'
+import SetupFork from './components/SetupFork'
+import { persistor, store } from './configureStore';
 
 export default class App extends React.Component {
   render() {
-    return <RootStack />;
+    return (
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <SetupFork />
+        </PersistGate>
+      </Provider>
+    )
   }
 }

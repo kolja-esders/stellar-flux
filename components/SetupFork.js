@@ -1,10 +1,11 @@
 import React from 'react';
 import { connect } from "react-redux";
+import { StackNavigator } from 'react-navigation';
 
-import SetupContainerPage from './pages/SetupContainerPage';
-import BalancePage from './pages/BalancePage';
-import SendPage from './pages/SendPage';
-import ReceivePage from './pages/ReceivePage';
+import SetupContainerPage from '../pages/SetupContainerPage';
+import BalancePage from '../pages/BalancePage';
+import SendPage from '../pages/SendPage';
+import ReceivePage from '../pages/ReceivePage';
 
 const DefaultStack = StackNavigator({
     BalancePage: {
@@ -45,7 +46,7 @@ const mapStateToProps = state => ({
   accountId: state.account.id
 })
 
-class SetupFork {
+class SetupFork extends React.Component {
   render() {
     if (this.props.accountId) {
       return <DefaultStack />
